@@ -4,31 +4,21 @@ from rest_framework import permissions
 from rest_framework import filters
 from rest_framework import pagination
 from django.shortcuts import get_object_or_404
-
-from .permissions import IsAuthorOrReadOnly, ReadOnly
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (CommentSerializer, FollowSerializer,
                           GroupSerializer, PostSerializer)
-from posts.models import Comment, Follow, Group, Post, User
+from posts.models import Comment, Group, Post, User
 
 
-class ChoosePermissionMixin:
-    """
-    Промежуточный миксин.
-
-    выбор пермишена в зависимости от типа запроса.
-    """
-    permission_classes = (IsAuthorOrReadOnly,)
-
-    def get_permissions(self):
-        if self.action == 'retrieve':
-            return (ReadOnly(),)
-        return super().get_permissions()
-
-
-class PostViewSet(ChoosePermissionMixin, viewsets.ModelViewSet):
+class PostViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Post."""
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    permission_classes = (IsAuthorOrReadOnly,
+                          permissions.IsAuthenticatedOrReadOnly)
+    # filter_backends = (filters.OrderingFilter,)
+    # ordering_fields = ('pub_date',)
+    # ordering = ('-pub_date',)
     pagination_class = pagination.LimitOffsetPagination
 
     def perform_create(self, serializer):
@@ -36,10 +26,12 @@ class PostViewSet(ChoosePermissionMixin, viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
 
-class CommentViewSet(ChoosePermissionMixin, viewsets.ModelViewSet):
+class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Comment."""
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = (IsAuthorOrReadOnly,
+                          permissions.IsAuthenticatedOrReadOnly)
 
     def get_post(self):
         """Получение поста, соответствующего post_id из URL."""
@@ -59,7 +51,6 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет для модели Group."""
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 class CreateListViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -70,8 +61,8 @@ class CreateListViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 
 class FollowViewSet(CreateListViewSet):
     """Вьюсет для модели Follow."""
-    queryset = Follow.objects.all()
     serializer_class = FollowSerializer
+    permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('following__username',)
 
