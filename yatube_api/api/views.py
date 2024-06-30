@@ -12,13 +12,11 @@ from posts.models import Comment, Group, Post, User
 
 class PostViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Post."""
+
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = (IsAuthorOrReadOnly,
                           permissions.IsAuthenticatedOrReadOnly)
-    # filter_backends = (filters.OrderingFilter,)
-    # ordering_fields = ('pub_date',)
-    # ordering = ('-pub_date',)
     pagination_class = pagination.LimitOffsetPagination
 
     def perform_create(self, serializer):
@@ -28,6 +26,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Comment."""
+
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrReadOnly,
@@ -49,6 +48,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет для модели Group."""
+
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
@@ -56,11 +56,13 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
 class CreateListViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     """Промежуточный вьюсет: создание записи и получение записей."""
+
     pass
 
 
 class FollowViewSet(CreateListViewSet):
     """Вьюсет для модели Follow."""
+
     serializer_class = FollowSerializer
     permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
@@ -72,7 +74,7 @@ class FollowViewSet(CreateListViewSet):
 
     def get_queryset(self):
         """Получение польз-ей, на которых подписан текущий юзер."""
-        return self.get_user().users.all()
+        return self.get_user().users_follows.all()
 
     def perform_create(self, serializer):
         """Создание записи о подписке для текущего пользователя."""

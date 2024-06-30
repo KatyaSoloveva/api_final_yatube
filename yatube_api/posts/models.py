@@ -15,7 +15,7 @@ class Group(models.Model):
 
 class Follow(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='users')
+        User, on_delete=models.CASCADE, related_name='users_follows')
     following = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='follows')
 
